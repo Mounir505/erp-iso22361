@@ -1,0 +1,20 @@
+Copyright © 2026 Équipe projet n°3 — ENSA
+(Malak, Hiba, Yao Landry, Mounir Merghiche)
+
+TOUS DROITS RÉSERVÉS.
+
+Ce logiciel (code source, scripts, migrations, documentation et éléments graphiques
+du « Mini-ERP hospitalier — Gestion de crise ISO 22361 ») a été réalisé dans le cadre
+d'un atelier académique. Il est la propriété de ses auteurs.
+
+Aucune reproduction, modification, distribution ou utilisation, totale ou partielle,
+n'est autorisée sans l'accord écrit préalable des auteurs, à l'exception de la
+consultation et de l'évaluation par les enseignants et le jury de l'atelier.
+
+Les données patients contenues dans ce projet sont entièrement fictives.
+Les composants tiers (Spring Boot, React, PostgreSQL, etc.) restent soumis à
+leurs licences respectives.
+
+LE LOGICIEL EST FOURNI « EN L'ÉTAT », SANS GARANTIE D'AUCUNE SORTE. IL EST DESTINÉ
+EXCLUSIVEMENT À UN ENVIRONNEMENT DE LABORATOIRE ISOLÉ ET NE DOIT PAS ÊTRE UTILISÉ
+POUR TRAITER DES DONNÉES DE SANTÉ RÉELLES.

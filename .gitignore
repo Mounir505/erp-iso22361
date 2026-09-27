@@ -1,0 +1,14 @@
+.env
+.DS_Store
+# Backend
+erp-core/target/
+*.iml
+.idea/
+# Frontend
+dashboard/node_modules/
+dashboard/dist/
+# Sauvegardes locales éventuelles
+backups/
+
+# Réglages personnels d’IDE
+.vscode/

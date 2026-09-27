@@ -1,0 +1,5 @@
+# Fins de ligne Unix obligatoires : les scripts .sh et fichiers montés dans les
+# conteneurs Linux cassent avec des fins de ligne Windows (CRLF).
+* text=auto eol=lf
+*.png binary
+*.pdf binary

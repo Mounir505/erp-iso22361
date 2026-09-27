@@ -1,0 +1,22 @@
+# © 2026 Équipe projet n°3 — ENSA. Tous droits réservés. Voir le fichier LICENSE.
+# =============================================================================
+# Override de SOUTENANCE (poste unique) : rend le dashboard accessible depuis le
+# navigateur de la machine hôte, et UNIQUEMENT via la boucle locale (127.0.0.1).
+#   docker compose -f docker-compose.yml -f docker-compose.demo.yml up -d
+#   → http://localhost:8501
+# Le réseau « lab » reste interne ; seul le dashboard rejoint un second réseau
+# (« demo ») nécessaire à la publication du port. erp-core et erp-db ne sont
+# jamais exposés.
+# =============================================================================
+services:
+  dashboard:
+    ports:
+      - "127.0.0.1:8501:8501"
+    networks:
+      lab:
+        ipv4_address: 172.16.10.20
+      demo: {}
+
+networks:
+  demo:
+    name: erp-demo

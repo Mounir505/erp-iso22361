@@ -1,0 +1,99 @@
+# © 2026 Équipe projet n°3 — ENSA. Tous droits réservés. Voir le fichier LICENSE.
+# =============================================================================
+# Mini-ERP hospitalier — atelier ISO 22361 (LAB ISOLÉ, DONNÉES FICTIVES)
+# Topologie conforme au livrable 3 (Yao Landry) :
+#   erp-core  172.16.10.10:8000   application + API /health, /events
+#   erp-db    172.16.10.11:5432   PostgreSQL 16 (données fictives)
+#   dashboard 172.16.10.20:8501   interface ERP + conscience partagée de crise
+# Aucun port n'est publié : le réseau "lab" est interne (pas d'accès Internet).
+# Pour la soutenance sur un poste unique, voir docker-compose.demo.yml.
+# =============================================================================
+name: erp-iso22361
+
+services:
+  erp-db:
+    image: postgres:16-alpine
+    container_name: erp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: UTC
+    volumes:
+      - erp-pgdata:/var/lib/postgresql/data
+      # Volume de sauvegarde séparé, monté UNIQUEMENT ici (hors de portée d'erp-core)
+      - erp-backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      lab:
+        ipv4_address: 172.16.10.11
+
+  erp-core:
+    build: ./erp-core
+    image: erp-iso22361/erp-core:latest
+    container_name: erp-core
+    restart: unless-stopped
+    depends_on:
+      erp-db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://erp-db:5432/${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-120}
+      CRISIS_EXERCISE_ENABLED: ${CRISIS_EXERCISE_ENABLED:-false}
+      TZ: UTC
+    volumes:
+      # Journal JSON partagé (events.log), lisible par le dashboard (livrable 3.3)
+      - erp-logs:/var/log/erp
+      # Documents fictifs surveillés par le contrôle d'intégrité
+      - erp-documents:/var/lib/erp/documents
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 6
+    networks:
+      lab:
+        ipv4_address: 172.16.10.10
+
+  dashboard:
+    build: ./dashboard
+    image: erp-iso22361/dashboard:latest
+    container_name: dashboard
+    restart: unless-stopped
+    depends_on:
+      erp-core:
+        condition: service_healthy
+    volumes:
+      # Lecture seule du journal partagé (alternative fichier du contrat 2.4)
+      - erp-logs:/var/log/erp:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8501/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      lab:
+        ipv4_address: 172.16.10.20
+
+networks:
+  lab:
+    name: erp-lab
+    internal: true            # aucun routage vers l'extérieur
+    ipam:
+      config:
+        - subnet: 172.16.10.0/24
+
+volumes:
+  erp-pgdata:
+  erp-backups:
+  erp-logs:
+  erp-documents:

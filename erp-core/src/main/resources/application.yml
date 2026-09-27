@@ -1,0 +1,65 @@
+# © 2026 Équipe projet n°3 — ENSA. Tous droits réservés. Voir le fichier LICENSE.
+# Configuration de l'ERP — toutes les valeurs sensibles viennent de l'environnement.
+server:
+  port: 8000
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: erp-core
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/erp}
+    username: ${DB_USER:erp}
+    password: ${DB_PASSWORD:erp}
+    hikari:
+      # Échec rapide si la base tombe : la sonde de disponibilité doit le voir vite
+      connection-timeout: 3000
+      validation-timeout: 2000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate          # le schéma est la propriété exclusive de Flyway
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jackson:
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false   # horodatages ISO 8601 (contrat d'interface 2.4)
+
+erp:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
+  cors:
+    # Le dashboard passe par le proxy nginx (même origine) ; utile en développement Vite
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  audit:
+    # Journal JSON ligne par ligne, centralisé dans un volume partagé (livrable 3.3)
+    fichier: ${AUDIT_LOG_FILE:/var/log/erp/events.log}
+  crise:
+    # Seuils de déclenchement (livrable 1.3). Le seuil d'échecs d'authentification et la
+    # fenêtre sont portés par l'entité DetecteurDeSeuil (modifiables à chaud) ; ces valeurs
+    # ne servent qu'à initialiser/compléter.
+    seuils:
+      indisponibilite-secondes: ${SEUIL_INDISPO_SECONDES:120}
+      alterations-integrite: ${SEUIL_ALTERATIONS:1}
+      acces-masse-dossiers: ${SEUIL_ACCES_MASSE:50}
+      fenetre-acces-masse-secondes: ${FENETRE_ACCES_MASSE:60}
+    sonde-disponibilite-ms: 10000
+    integrite:
+      repertoire: ${INTEGRITE_REPERTOIRE:/var/lib/erp/documents}
+      intervalle-ms: 15000
+  exercice:
+    # "Faiblesse contrôlée" : simulateur de signaux. DÉSACTIVÉ par défaut.
+    enabled: ${CRISIS_EXERCISE_ENABLED:false}
+
+logging:
+  level:
+    root: INFO
+    ma.atelier.erp: INFO
